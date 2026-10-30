@@ -12208,6 +12208,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "app@workspace:packages/app"
   dependencies:
+    "@backstage/catalog-model": "npm:^1.10.2"
     "@backstage/cli": "npm:^0.36.7"
     "@backstage/core-app-api": "npm:^1.20.6"
     "@backstage/core-components": "npm:^0.18.15"
@@ -12224,6 +12225,7 @@ __metadata:
     "@backstage/plugin-catalog": "npm:^2.0.10"
     "@backstage/plugin-catalog-graph": "npm:^0.6.9"
     "@backstage/plugin-catalog-import": "npm:^0.13.19"
+    "@backstage/plugin-catalog-react": "npm:^3.3.0"
     "@backstage/plugin-home": "npm:^0.9.11"
     "@backstage/plugin-home-react": "npm:^0.1.43"
     "@backstage/plugin-notifications": "npm:^0.6.1"
@@ -12865,8 +12867,11 @@ __metadata:
     "@backstage/plugin-signals-backend": "npm:^0.3.20"
     "@backstage/plugin-techdocs-backend": "npm:^2.4.0"
     "@backstage/plugin-user-settings-backend": "npm:^0.4.8"
+    "@types/express": "npm:^4.17.25"
     app: "link:../app"
     better-sqlite3: "npm:^12.0.0"
+    express: "npm:^4.22.3"
+    express-promise-router: "npm:^4.1.1"
     node-gyp: "npm:^10.0.0"
     pg: "npm:^8.11.3"
   languageName: unknown
@@ -16728,7 +16733,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express-promise-router@npm:^4.1.0":
+"express-promise-router@npm:^4.1.0, express-promise-router@npm:^4.1.1":
   version: 4.1.1
   resolution: "express-promise-router@npm:4.1.1"
   dependencies:
@@ -16773,7 +16778,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"express@npm:^4.14.0, express@npm:^4.22.0, express@npm:^4.22.1":
+"express@npm:^4.14.0, express@npm:^4.22.0, express@npm:^4.22.1, express@npm:^4.22.3":
   version: 4.22.3
   resolution: "express@npm:4.22.3"
   dependencies:

@@ -17,6 +17,7 @@ import { OAuth2 } from '@backstage/core-app-api';
 import { SignInPage } from '@backstage/core-components';
 import { UnifiedThemeProvider } from '@backstage/theme';
 import { augurTheme } from './theme';
+import { channelsCard, deploymentCard } from './pipeline';
 
 /** Sign-in through Keycloak, as the auth backend's `oidc` provider (app-config.production.yaml). */
 export const keycloakAuthApiRef = createApiRef<
@@ -87,4 +88,10 @@ const theme = ThemeBlueprint.make({
 export const augurModule = createFrontendModule({
   pluginId: 'app',
   extensions: [keycloakAuthApi, signInPage, theme],
+});
+
+/** AUGUR's cards on the catalog's entity pages: each unit's channels, and each deployment (pipeline.tsx). */
+export const augurCatalogModule = createFrontendModule({
+  pluginId: 'catalog',
+  extensions: [channelsCard, deploymentCard],
 });

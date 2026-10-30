@@ -68,4 +68,7 @@ backend.add(import('@backstage/plugin-signals-backend'));
 // mcp actions plugin
 backend.add(import('@backstage/plugin-mcp-actions-backend'));
 
+// AUGUR's pipeline feed, for the channels and deployment cards (src/augur.ts)
+backend.add(import('./augur'));
+
 backend.start();

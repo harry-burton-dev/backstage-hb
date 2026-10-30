@@ -10,6 +10,8 @@ The plan: [Backstage for AUGUR](https://claude.ai/artifact/KmiJ5zLexGxG9B4ctBKSz
 | Docs | AUGUR's `docs/` as one TechDocs site, on the AUGUR platform system, built inside the portal by MkDocs |
 | APIs | AUGUR's OpenAPI contracts, and each app's intents |
 | Sign-in | Keycloak: the workbench AUGUR's realm, as the `backstage` client |
+| Channels | Each AUGUR unit's version on dev, preview and production, its dev build, and what's waiting to move on: a card on its system, from AUGUR's pipeline feed (`packages/backend/src/augur.ts`) |
+| Deployments | Each AUGUR deployment in `org/deployments.yaml`: its ring, the versions that ring takes, and a link to its Upgrade Centre |
 | Look | AUGUR's colours and type (`packages/app/src/modules/augur/theme.ts`) |
 
 AUGUR never depends on the portal: no AUGUR service calls it, and it never writes to AUGUR. If it's down, nothing on any AUGUR server changes.
@@ -25,7 +27,7 @@ On the server, beside the workbench AUGUR. It's a compose project of its own (`b
    ```
 2. **Tailscale.** Make an auth key in the Tailscale admin console (Settings → Keys, reusable off, tagged as you tag servers) and put it in `TS_AUTHKEY`. `BACKSTAGE_URL` is `https://backstage.<your tailnet>.ts.net` (the same tailnet name as AUGUR's address).
 3. **Secrets.** `openssl rand -hex 24` for `POSTGRES_PASSWORD`, and again for `AUTH_SESSION_SECRET`.
-4. **GitHub.** `GITHUB_TOKEN` is a read-only token with Contents read on im-platform. The one AUGUR's Updates page uses (`infra/deploy/secrets/release-feed-token`) does.
+4. **GitHub.** `GITHUB_TOKEN` is a read-only token with Contents read on im-platform. The one AUGUR's Upgrade Centre uses (`infra/deploy/secrets/release-feed-token`) does. For the channels and deployment cards, `GITHUB_READ_USER` and `GITHUB_READ_KEY` are a GitHub user and a classic token with read:packages, the same kind of key an AUGUR server pulls with. Without them the cards say the feed can't be read; everything else works.
 5. **Sign-in.** Make the `backstage` client in AUGUR's Keycloak, with AUGUR's folder (where its `.env` is) and the portal's address:
    ```sh
    ./keycloak-client.sh /path/to/im-platform/infra/deploy https://backstage.<your tailnet>.ts.net
@@ -56,6 +58,10 @@ GITHUB_TOKEN=<read-only token> yarn start     # http://localhost:3000, signed in
 
 Locally you're a guest, and TechDocs builds in Docker. Put anything only for your machine in `app-config.local.yaml` (it's ignored).
 
+## Adding a deployment
+
+Add a `Resource` of type `augur-deployment` to `org/deployments.yaml`, with `augur.dev/ring` (its `SERVER_RING`) and `augur.dev/url` (its `PLATFORM_URL`). The portal never asks a deployment what it runs, because AUGUR doesn't tell anyone who isn't signed in: the card shows what its ring takes and links to its Upgrade Centre, which shows what it runs. Check the workbench's address in `org/deployments.yaml` matches its `PLATFORM_URL`.
+
 ## Adding a product
 
 Have the product write its own catalog (as AUGUR does with `pnpm catalog`) and add its `all.yaml` under `catalog.locations` in both app-config files. Add people and teams to `org/org.yaml`.
@@ -63,4 +69,4 @@ Have the product write its own catalog (as AUGUR does with `pnpm catalog`) and a
 ## Known gaps
 
 - Links in AUGUR's guides that point outside `docs/` (to a README or a contract) don't resolve in the TechDocs site yet.
-- No live signals yet: CI runs, each unit's version on dev, preview and production, and AUGUR's own checks as scorecards come next (phase B2).
+- No CI runs or scorecards of AUGUR's own checks yet (phase B2). Each unit's channels are there.

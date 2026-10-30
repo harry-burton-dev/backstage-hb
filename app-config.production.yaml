@@ -46,5 +46,8 @@ catalog:
   locations:
     - type: file
       target: ./org/org.yaml
+    # Each AUGUR deployment, for its card (packages/app/src/modules/augur/pipeline.tsx).
+    - type: file
+      target: ./org/deployments.yaml
     - type: url
       target: https://github.com/harry-burton-dev/im-platform/blob/dev/catalog/all.yaml

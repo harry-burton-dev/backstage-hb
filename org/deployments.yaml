@@ -1,0 +1,28 @@
+# Each AUGUR deployment the company runs. Its ring (SERVER_RING in its .env) says which branch's
+# versions it takes; its url is where its Upgrade Centre is (<url>/admin/updates). Add one per server.
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: augur-workbench
+  title: AUGUR workbench
+  description: Harry's dev workbench on the MSI server. Takes AUGUR dev builds by itself.
+  annotations:
+    augur.dev/ring: dev
+    augur.dev/url: https://platform.tailfb071b.ts.net
+spec:
+  type: augur-deployment
+  owner: group:default/augur-core
+  system: augur-platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: augur-demo
+  title: AUGUR demo
+  description: The demonstration deployment, once the foundations are complete. Not running yet.
+  annotations:
+    augur.dev/ring: production
+spec:
+  type: augur-deployment
+  owner: group:default/augur-core
+  system: augur-platform

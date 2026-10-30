@@ -36,6 +36,8 @@ services:
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-backstage}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?set OIDC_CLIENT_SECRET in .env}
       GITHUB_TOKEN: ${GITHUB_TOKEN:?set GITHUB_TOKEN in .env}
+      GITHUB_READ_USER: ${GITHUB_READ_USER:-}
+      GITHUB_READ_KEY: ${GITHUB_READ_KEY:-}
     volumes:
       - techdocs:/app/techdocs
     mem_limit: ${BACKSTAGE_MEMORY:-2g}

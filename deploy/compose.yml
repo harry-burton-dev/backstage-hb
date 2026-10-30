@@ -38,6 +38,8 @@ services:
       GITHUB_TOKEN: ${GITHUB_TOKEN:?set GITHUB_TOKEN in .env}
       GITHUB_READ_USER: ${GITHUB_READ_USER:-}
       GITHUB_READ_KEY: ${GITHUB_READ_KEY:-}
+      GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID:-}
+      GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET:-}
     volumes:
       - techdocs:/app/techdocs
     mem_limit: ${BACKSTAGE_MEMORY:-2g}

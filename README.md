@@ -43,7 +43,7 @@ The portal joins the tailnet as a real interface (`/dev/net/tun`), not in usersp
 
 ## Upgrade it
 
-Each push to `main` builds `ghcr.io/harry-burton-dev/backstage:latest` and `:<commit>`. On the server: `docker compose pull && docker compose up -d`. To hold a version, set `BACKSTAGE_VERSION=<commit>` in `.env`.
+Each push to `main` builds `ghcr.io/harry-burton-dev/backstage-hb:latest` and `:<commit>`. On the server: `docker compose pull && docker compose up -d`. To hold a version, set `BACKSTAGE_VERSION=<commit>` in `.env`.
 
 Backstage releases every month. `yarn backstage-cli versions:bump` moves every `@backstage/*` package to the newest release; open it as a pull request and let CI build it.
 

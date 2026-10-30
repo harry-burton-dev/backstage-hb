@@ -1,4 +1,4 @@
-# Typechecks, then builds the portal's image and pushes it to ghcr.io/<owner>/backstage, tagged with
+# Typechecks, then builds the portal's image and pushes it to ghcr.io/<owner>/<repo>, tagged with
 # the commit and, on main, `latest`. The server pulls it (README.md, "Upgrade it").
 name: Build
 on:
@@ -38,7 +38,7 @@ jobs:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/backstage:${{ github.sha }}
-            ${{ github.ref == 'refs/heads/main' && format('ghcr.io/{0}/backstage:latest', github.repository_owner) || '' }}
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ${{ github.ref == 'refs/heads/main' && format('ghcr.io/{0}:latest', github.repository) || '' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

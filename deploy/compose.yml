@@ -22,7 +22,7 @@ services:
       - ./tailscale:/config:ro
 
   backstage:
-    image: ${BACKSTAGE_IMAGE:-ghcr.io/harry-burton-dev/backstage}:${BACKSTAGE_VERSION:-latest}
+    image: ${BACKSTAGE_IMAGE:-ghcr.io/harry-burton-dev/backstage-hb}:${BACKSTAGE_VERSION:-latest}
     restart: unless-stopped
     network_mode: service:tailscale
     depends_on:

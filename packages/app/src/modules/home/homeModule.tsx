@@ -3,43 +3,23 @@ import { HomePageWidgetBlueprint } from '@backstage/plugin-home-react/alpha';
 import { MarkdownContent } from '@backstage/core-components';
 
 const content = `
-## Welcome to Backstage! 👋
+## The company's developer portal
 
-Backstage is your developer portal — a single place to manage all your
-software, services, and documentation.
+Everything we build, who owns it, what it calls and what it stands on.
+AUGUR describes itself (\`pnpm catalog\` in im-platform), so nothing here
+is kept up by hand.
 
-### Quick Start
-
-- **Explore the catalog** — Browse all your organization's software in
-  the [Software Catalog](/catalog)
-- **Create something new** — Use a [Software Template](/create) to
-  scaffold a new project in minutes
-- **Read the docs** — Find technical documentation for any service
-  right from its catalog page
-
-### Helpful Links
-
-- [Backstage Documentation](https://backstage.io/docs)
-- [Customizing Your Homepage](https://backstage.io/docs/getting-started/homepage)
-- [Adding Plugins](https://backstage.io/docs/plugins)
-- [Contributing](https://github.com/backstage/backstage/blob/master/CONTRIBUTING.md)
-
-### How to Edit This Card
-
-This widget is defined in \`packages/app/src/modules/home/homeModule.tsx\`.
-You can update the markdown content there to welcome your team with
-your own links and getting started tips.
-
-To remove this card entirely, delete the getting started widget and
-remove it from the home module's extensions array in this file.
+- **[Catalog](/catalog)**: AUGUR's platform, its apps, their APIs and resources, as on \`dev\`.
+- **[APIs](/api-docs)**: the gateway, identity, registry, events and models contracts, and each app's intents.
+- **[Docs](/docs)**: AUGUR's guides from \`docs/\`, as one site.
 `;
 
 const gettingStartedWidget = HomePageWidgetBlueprint.make({
   name: 'getting-started',
   params: {
     name: 'GettingStarted',
-    title: 'Getting Started',
-    description: 'Tips and links to help you get started with Backstage',
+    title: 'Start here',
+    description: 'What this portal is for',
     components: async () => ({
       Content: () => <MarkdownContent content={content} />,
     }),

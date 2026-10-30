@@ -1,0 +1,59 @@
+# The company's Backstage, on the same server as the workbench AUGUR but in a compose project of
+# its own (`backstage`), with its own Postgres and its own name on the tailnet. README.md, "Run it".
+name: backstage
+
+services:
+  # Puts the portal on the tailnet as https://<TS_HOSTNAME>.<tailnet>.ts.net. Not userspace: the
+  # portal shares this network, and must reach AUGUR's Keycloak over the tailnet to sign people in.
+  tailscale:
+    image: tailscale/tailscale:v1.76.6
+    restart: unless-stopped
+    hostname: ${TS_HOSTNAME:-backstage}
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:?set TS_AUTHKEY in .env}
+      TS_HOSTNAME: ${TS_HOSTNAME:-backstage}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_USERSPACE: "false"
+    devices: [/dev/net/tun:/dev/net/tun]
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes:
+      - tailscale:/var/lib/tailscale
+      - ./tailscale:/config:ro
+
+  backstage:
+    image: ${BACKSTAGE_IMAGE:-ghcr.io/harry-burton-dev/backstage}:${BACKSTAGE_VERSION:-latest}
+    restart: unless-stopped
+    network_mode: service:tailscale
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      BACKSTAGE_URL: ${BACKSTAGE_URL:?set BACKSTAGE_URL in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      AUTH_SESSION_SECRET: ${AUTH_SESSION_SECRET:?set AUTH_SESSION_SECRET in .env}
+      OIDC_METADATA_URL: ${OIDC_METADATA_URL:?set OIDC_METADATA_URL in .env}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-backstage}
+      OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?set OIDC_CLIENT_SECRET in .env}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:?set GITHUB_TOKEN in .env}
+    volumes:
+      - techdocs:/app/techdocs
+    mem_limit: ${BACKSTAGE_MEMORY:-2g}
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: backstage
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U backstage"]
+      interval: 5s
+      retries: 20
+
+volumes:
+  tailscale:
+  techdocs:
+  pgdata:

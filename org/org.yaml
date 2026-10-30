@@ -1,0 +1,20 @@
+# The people and teams of the company, as Backstage sees them. Teams that build AUGUR are in
+# AUGUR's own catalog (catalog/augur.yaml in im-platform); add people here.
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: company
+  title: The company
+  description: Everyone who builds or runs the company's products
+spec:
+  type: organization
+  children: [augur-core]
+---
+apiVersion: backstage.io/v1alpha1
+kind: User
+metadata:
+  name: harry
+spec:
+  profile:
+    displayName: Harry
+  memberOf: [company, augur-core]

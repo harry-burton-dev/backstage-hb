@@ -43,6 +43,17 @@ On the server, beside the workbench AUGUR. It's a compose project of its own (`b
 
 The portal joins the tailnet as a real interface (`/dev/net/tun`), not in userspace as AUGUR's sidecar does, because it calls AUGUR's Keycloak over the tailnet when it signs you in.
 
+## Git Release Manager
+
+**Git Release Manager** in the sidebar (`/git-release-manager`) makes release candidates, patches them and promotes them to releases, as GitHub releases and tags on a repository you pick. It acts as you: the first time, it asks you to sign in to GitHub and allow the `repo` scope.
+
+That sign-in needs a GitHub OAuth app (GitHub → Settings → Developer settings → OAuth Apps → New OAuth App):
+
+- Homepage URL: `BACKSTAGE_URL`
+- Authorization callback URL: `BACKSTAGE_URL/api/auth/github/handler/frame`
+
+Put its client ID and a new client secret in `.env` as `GITHUB_OAUTH_CLIENT_ID` and `GITHUB_OAUTH_CLIENT_SECRET`, then `docker compose up -d`. Until they're set the page is there but can't sign in to GitHub.
+
 ## Upgrade it
 
 Each push to `main` builds `ghcr.io/harry-burton-dev/backstage-hb:latest` and `:<commit>`. On the server: `docker compose pull && docker compose up -d`. To hold a version, set `BACKSTAGE_VERSION=<commit>` in `.env`.

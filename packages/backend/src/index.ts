@@ -29,6 +29,8 @@ backend.add(import('@backstage/plugin-auth-backend'));
 backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
 // Keycloak, on the server (app-config.production.yaml)
 backend.add(import('@backstage/plugin-auth-backend-module-oidc-provider'));
+// GitHub, for the Git Release Manager's own sign-in to GitHub (app-config.github.yaml)
+backend.add(import('@backstage/plugin-auth-backend-module-github-provider'));
 
 // catalog plugin
 backend.add(import('@backstage/plugin-catalog-backend'));

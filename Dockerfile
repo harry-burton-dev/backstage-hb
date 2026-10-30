@@ -46,4 +46,6 @@ COPY --chown=node:node org ./org
 RUN mkdir -p /app/techdocs
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--no-node-snapshot"
-CMD ["node", "packages/backend", "--config", "app-config.yaml", "--config", "app-config.production.yaml"]
+# app-config.github.yaml only once the GitHub OAuth app is set up (README.md, "Git Release Manager"):
+# a GitHub provider without its client ID stops the backend from starting.
+CMD ["sh", "-c", "exec node packages/backend --config app-config.yaml --config app-config.production.yaml ${GITHUB_OAUTH_CLIENT_ID:+--config app-config.github.yaml}"]

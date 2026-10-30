@@ -1,0 +1,9 @@
+# GitHub sign-in for the Git Release Manager (/git-release-manager): it acts on releases as you,
+# with your own GitHub token, not the portal's read-only one. Loaded on the server only when
+# GITHUB_OAUTH_CLIENT_ID is set (Dockerfile). README.md, "Git Release Manager".
+auth:
+  providers:
+    github:
+      production:
+        clientId: ${GITHUB_OAUTH_CLIENT_ID}
+        clientSecret: ${GITHUB_OAUTH_CLIENT_SECRET}

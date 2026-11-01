@@ -50,4 +50,4 @@ catalog:
     - type: file
       target: ./org/deployments.yaml
     - type: url
-      target: https://github.com/harry-burton-dev/im-platform/blob/dev/catalog/all.yaml
+      target: https://github.com/harry-burton-dev/im-platform/blob/main/catalog/all.yaml

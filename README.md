@@ -2,11 +2,9 @@
 
 The company's developer portal: one [Backstage](https://backstage.io) above every product and every deployment. It reads each product's catalog from its repository, so nothing in it is kept up by hand. Today that's AUGUR, which writes its catalog with `pnpm catalog` (im-platform, `docs/catalog.md`).
 
-The plan: [Backstage for AUGUR](https://claude.ai/artifact/KmiJ5zLexGxG9B4ctBKSzj).
-
 | What | Where |
 | --- | --- |
-| Catalog | AUGUR's platform, apps, APIs and resources, read from im-platform's `dev` branch; the company's people in `org/org.yaml` |
+| Catalog | AUGUR's platform, apps, APIs and resources, read from im-platform's `main` branch; the company's people in `org/org.yaml` |
 | Docs | AUGUR's `docs/` as one TechDocs site, on the AUGUR platform system, built inside the portal by MkDocs |
 | APIs | AUGUR's OpenAPI contracts, and each app's intents |
 | Sign-in | Keycloak: the workbench AUGUR's realm, as the `backstage` client |

@@ -73,7 +73,7 @@ catalog:
       target: ../../org/deployments.yaml
     # AUGUR, as AUGUR describes itself (pnpm catalog in im-platform), from dev: where work lands.
     - type: url
-      target: https://github.com/harry-burton-dev/im-platform/blob/dev/catalog/all.yaml
+      target: https://github.com/harry-burton-dev/im-platform/blob/main/catalog/all.yaml
 
 # AUGUR's pipeline feed: where each unit is between dev, preview and production (packages/backend/src/augur.ts).
 # Read with the same kind of key a deployment reads its release feed with: a classic token with read:packages.

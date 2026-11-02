@@ -4,6 +4,7 @@ import express from 'express';
 import Router from 'express-promise-router';
 import { checkReport, deploymentOf, REPORT_KEY } from './reports';
 import { reportStore } from './report-store';
+import { bakeOf } from './bake';
 
 /**
  * AUGUR's pipeline feed for the portal: where each unit is between dev, preview and production, as
@@ -111,7 +112,23 @@ export default createBackendPlugin({
           res.json({ keySet, ...((await reports.latest(req.params.name)) ?? {}) });
         });
 
+        /**
+         * How long a release has run on each deployment, for im-platform's Promote to stable (ADR 0018). It
+         * needs no sign-in: it says only which versions ran where and for how long, which the deployments'
+         * own records already say, and the portal is reached only on the tailnet.
+         */
+        router.get('/bake', async (req, res) => {
+          const unit = typeof req.query.unit === 'string' ? req.query.unit : '';
+          const version = typeof req.query.version === 'string' ? req.query.version : '';
+          if (!/^[a-z][a-z0-9-]*$/.test(unit) || !/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(version)) {
+            res.status(400).json({ problem: 'Ask for ?unit=<augur or an app id>&version=<x.y.z>.' });
+            return;
+          }
+          res.json({ unit, version, deployments: bakeOf(await reports.all(), unit, version) });
+        });
+
         http.addAuthPolicy({ path: '/reports', allow: 'unauthenticated' });
+        http.addAuthPolicy({ path: '/bake', allow: 'unauthenticated' });
         http.use(router);
       },
     });

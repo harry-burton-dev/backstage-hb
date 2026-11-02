@@ -81,6 +81,10 @@ The portal never asks a deployment anything. Each deployment's registry sends a 
 
 That endpoint needs no sign-in, because the signature is the credential. An air-gapped deployment exports the same record as a file from its Upgrade Centre; carry it across and choose it under **Carry in an exported record** on the deployment's card. The card warns when the last record is more than 36 hours old. The portal keeps each deployment's last 500 records in its database, for bake times and DORA figures later.
 
+### Bake time
+
+`GET <BACKSTAGE_URL>/api/augur/bake?unit=augur&version=0.14.0` says, from those records, how long each deployment has run that version: from its first record running it to its latest one still running it, and whether any record says it went back from it. im-platform's **Promote to stable** asks it before it makes a release stable (ADR 0018 there): a release must have run on a preview deployment for the bake time with no going back. It needs no sign-in, since it says no more than the records do, and the portal is only on the tailnet. The workflow reaches it through Tailscale (im-platform docs/release-channels.md says what to set up).
+
 ## Adding a product
 
 Have the product write its own catalog (as AUGUR does with `pnpm catalog`) and add its `all.yaml` under `catalog.locations` in both app-config files. Add people and teams to `org/org.yaml`.

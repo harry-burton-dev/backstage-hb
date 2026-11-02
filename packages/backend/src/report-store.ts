@@ -29,6 +29,11 @@ export async function reportStore(db: Knex) {
       const row = await rows(deployment).first();
       return row ? { report: JSON.parse(row.payload), receivedAt: row.received_at, via: row.via } : undefined;
     },
+    /** Every kept record, from every deployment, oldest first: what bake time is worked out from. */
+    async all(): Promise<DeploymentReport[]> {
+      const kept = await db(TABLE).orderBy('sent_at', 'asc').pluck('payload');
+      return kept.map((payload: string) => JSON.parse(payload));
+    },
     /** Keeps a record unless one sent at the same time or later is already kept, so a copy can't be replayed over a newer one. */
     async add(report: DeploymentReport, via: StoredReport['via'], now = new Date()): Promise<'kept' | 'older'> {
       const newest = await rows(report.deployment).first('sent_at');

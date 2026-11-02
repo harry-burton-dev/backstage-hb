@@ -1,5 +1,9 @@
 import { coreServices, createBackendPlugin } from '@backstage/backend-plugin-api';
+import { catalogServiceRef } from '@backstage/plugin-catalog-node';
+import express from 'express';
 import Router from 'express-promise-router';
+import { checkReport, deploymentOf, REPORT_KEY } from './reports';
+import { reportStore } from './report-store';
 
 /**
  * AUGUR's pipeline feed for the portal: where each unit is between dev, preview and production, as
@@ -41,8 +45,15 @@ export default createBackendPlugin({
   pluginId: 'augur',
   register(env) {
     env.registerInit({
-      deps: { config: coreServices.rootConfig, http: coreServices.httpRouter, logger: coreServices.logger },
-      async init({ config, http, logger }) {
+      deps: {
+        config: coreServices.rootConfig,
+        http: coreServices.httpRouter,
+        logger: coreServices.logger,
+        database: coreServices.database,
+        auth: coreServices.auth,
+        catalog: catalogServiceRef,
+      },
+      async init({ config, http, logger, database, auth, catalog }) {
         const target = config.getOptionalString('augur.pipeline') ?? 'oci://ghcr.io/harry-burton-dev/im-platform/feed:pipeline';
         const user = config.getOptionalString('augur.readKey.user');
         const token = config.getOptionalString('augur.readKey.token');
@@ -62,6 +73,45 @@ export default createBackendPlugin({
           }
           res.json({ ...(last.body ? { pipeline: last.body } : {}), ...(last.problem ? { problem: last.problem } : {}) });
         });
+
+        // What each deployment runs, as it reports it (ADR 0019 in im-platform; src/reports.ts).
+        const reports = await reportStore(await database.getClient());
+        const deploymentEntity = async (name: string) => {
+          const entity = await catalog.getEntityByRef(`resource:default/${name}`, { credentials: await auth.getOwnServiceCredentials() });
+          return entity && (entity.spec as { type?: string } | undefined)?.type === 'augur-deployment' ? entity : undefined;
+        };
+
+        // A deployment sends its record here, signed: the signature is its credential, so no sign-in is asked
+        // for. The portal's own page posts a carried-in file to the same place (?via=file).
+        router.post('/reports', express.json({ limit: '256kb' }), async (req, res) => {
+          const name = deploymentOf(req.body);
+          const entity = name ? await deploymentEntity(name) : undefined;
+          if (name && !entity) {
+            res.status(404).json({ problem: `The catalog has no AUGUR deployment called ${name}. Add it to org/deployments.yaml.` });
+            return;
+          }
+          const checked = checkReport(req.body, entity?.metadata.annotations?.[REPORT_KEY]);
+          if ('problem' in checked) {
+            logger.warn(`AUGUR deployment record refused${name ? ` for ${name}` : ''}: ${checked.problem}`);
+            res.status(checked.status).json({ problem: checked.problem });
+            return;
+          }
+          const via = req.query.via === 'file' ? 'file' : 'sent';
+          if ((await reports.add(checked.report, via)) === 'older') {
+            res.status(409).json({ problem: `The portal already holds a record from ${name} sent at the same time or later.` });
+            return;
+          }
+          res.status(202).json({ kept: true, deployment: name, sentAt: checked.report.sentAt });
+        });
+
+        /** The newest record a deployment sent, for its card. */
+        router.get('/deployments/:name/report', async (req, res) => {
+          const entity = await deploymentEntity(req.params.name);
+          const keySet = !!entity?.metadata.annotations?.[REPORT_KEY];
+          res.json({ keySet, ...((await reports.latest(req.params.name)) ?? {}) });
+        });
+
+        http.addAuthPolicy({ path: '/reports', allow: 'unauthenticated' });
         http.use(router);
       },
     });

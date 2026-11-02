@@ -9,7 +9,7 @@ The company's developer portal: one [Backstage](https://backstage.io) above ever
 | APIs | AUGUR's OpenAPI contracts, and each app's intents |
 | Sign-in | Keycloak: the workbench AUGUR's realm, as the `backstage` client |
 | Channels | Each AUGUR unit's version on dev, preview and production, its dev build, and what's waiting to move on: a card on its system, from AUGUR's pipeline feed (`packages/backend/src/augur.ts`) |
-| Deployments | Each AUGUR deployment in `org/deployments.yaml`: its ring, the versions that ring takes, and a link to its Upgrade Centre |
+| Deployments | Each AUGUR deployment in `org/deployments.yaml`: its ring, the versions that ring takes, what it last reported it runs, and a link to its Upgrade Centre |
 | Look | AUGUR's colours and type (`packages/app/src/modules/augur/theme.ts`) |
 
 AUGUR never depends on the portal: no AUGUR service calls it, and it never writes to AUGUR. If it's down, nothing on any AUGUR server changes.
@@ -69,7 +69,17 @@ Locally you're a guest, and TechDocs builds in Docker. Put anything only for you
 
 ## Adding a deployment
 
-Add a `Resource` of type `augur-deployment` to `org/deployments.yaml`, with `augur.dev/ring` (its `SERVER_RING`) and `augur.dev/url` (its `PLATFORM_URL`). The portal never asks a deployment what it runs, because AUGUR doesn't tell anyone who isn't signed in: the card shows what its ring takes and links to its Upgrade Centre, which shows what it runs. Check the workbench's address in `org/deployments.yaml` matches its `PLATFORM_URL`.
+Add a `Resource` of type `augur-deployment` to `org/deployments.yaml`, with `augur.dev/ring` (its `SERVER_RING`) and `augur.dev/url` (its `PLATFORM_URL`). Its `metadata.name` is its `DEPLOYMENT_ID`. Check the workbench's address matches its `PLATFORM_URL`.
+
+### What it runs
+
+The portal never asks a deployment anything. Each deployment's registry sends a signed record of what it runs (AUGUR and each app's version, what's available, its update policies, health and its last upgrades' results, no personal data) after each change and once a day, to `<PORTAL_URL>/api/augur/reports` (ADR 0019 in im-platform). The record's shapes follow OpAMP's. The portal keeps a record only if:
+
+- the deployment is in `org/deployments.yaml`, under the name the record gives;
+- its public key is in the annotation `augur.dev/report-key`, copied from its Upgrade Centre (Reporting); and
+- the signature is that key's, and the record is newer than the one the portal holds and less than 30 days old.
+
+That endpoint needs no sign-in, because the signature is the credential. An air-gapped deployment exports the same record as a file from its Upgrade Centre; carry it across and choose it under **Carry in an exported record** on the deployment's card. The card warns when the last record is more than 36 hours old. The portal keeps each deployment's last 500 records in its database, for bake times and DORA figures later.
 
 ## Adding a product
 

@@ -157,9 +157,143 @@ function ChannelsCard() {
 /** The branch a deployment's ring takes its versions from. */
 const branchOfRing = (ring?: string): Branch | undefined => (ring === 'dev' || ring === 'preview' || ring === 'production' ? ring : undefined);
 
+/** What a deployment last reported it runs (ADR 0019 in im-platform; packages/backend/src/reports.ts). */
+interface ReportedUnit {
+  unit: string;
+  name: string;
+  running: string;
+  available?: string;
+  halted?: { reason: string };
+  policy?: string;
+  open?: { version?: string; state: string };
+  lastResult?: { state: string; version?: string; from?: string; finishedAt: string; message?: string };
+}
+interface ReportView {
+  keySet: boolean;
+  receivedAt?: string;
+  via?: 'sent' | 'file';
+  report?: {
+    sentAt: string;
+    reason: string;
+    ring?: string;
+    health?: { healthy: boolean; status: string };
+    units?: ReportedUnit[];
+    feed?: { state: string; checkedAt?: string };
+  };
+}
+
+/** A deployment reports once a day, so a record older than this is late. */
+const LATE_MS = 36 * 3600_000;
+
+const useReport = (name: string) => {
+  const discovery = useApi(discoveryApiRef);
+  const { fetch } = useApi(fetchApiRef);
+  const [state, setState] = useState<{ loading: boolean; reported?: ReportView; problem?: string }>({ loading: true });
+  const [again, setAgain] = useState(0);
+  useEffect(() => {
+    let gone = false;
+    (async () => {
+      try {
+        const res = await fetch(`${await discovery.getBaseUrl('augur')}/deployments/${encodeURIComponent(name)}/report`);
+        const reported = (await res.json()) as ReportView;
+        if (!gone) setState({ loading: false, reported });
+      } catch (err) {
+        if (!gone) setState({ loading: false, problem: `The portal couldn’t read what this deployment reported: ${(err as Error).message}` });
+      }
+    })();
+    return () => {
+      gone = true;
+    };
+  }, [discovery, fetch, name, again]);
+  /** Carries in a record exported from an air-gapped deployment's Upgrade Centre. */
+  const carryIn = async (file: File) => {
+    const res = await fetch(`${await discovery.getBaseUrl('augur')}/reports?via=file`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: await file.text(),
+    });
+    const body = (await res.json().catch(() => ({}))) as { problem?: string };
+    if (!res.ok) throw new Error(body.problem ?? `The portal refused the file (${res.status}).`);
+    setAgain(n => n + 1);
+  };
+  return { ...state, carryIn };
+};
+
+const resultWord: Record<string, string> = { done: 'went in', 'rolled-back': 'went back by itself', failed: 'didn’t finish', cancelled: 'was cancelled' };
+
+const unitLine = (u: ReportedUnit) => {
+  const parts = [u.running];
+  if (u.open) parts.push(`upgrading${u.open.version ? ` to ${u.open.version}` : ''}`);
+  else if (u.available) parts.push(`${u.available} available`);
+  if (u.halted) parts.push(`halted by its publisher: ${u.halted.reason}`);
+  if (u.lastResult) parts.push(`last: ${u.lastResult.version ?? ''} ${resultWord[u.lastResult.state] ?? u.lastResult.state} ${new Date(u.lastResult.finishedAt).toLocaleDateString()}`.replace(/ +/g, ' '));
+  return parts.join(' · ');
+};
+
+/** What the deployment runs, from its last signed record, and a way to carry in an exported one. */
+function ReportedRuns({ name }: { name: string }) {
+  const { loading, reported, problem, carryIn } = useReport(name);
+  const [fileProblem, setFileProblem] = useState<string>();
+  const report = reported?.report;
+  const late = report && Date.now() - Date.parse(report.sentAt) > LATE_MS;
+  return (
+    <>
+      <Typography variant="subtitle2" style={{ marginTop: 16 }}>
+        What it runs
+      </Typography>
+      {loading ? <Progress /> : null}
+      <Problem problem={problem} stale={false} />
+      {reported && !reported.keySet ? (
+        <Typography paragraph>
+          The portal can’t take its reports yet: its public key isn’t in the catalog. Copy it from its Upgrade Centre (Reporting) into the
+          annotation augur.dev/report-key in org/deployments.yaml.
+        </Typography>
+      ) : null}
+      {reported?.keySet && !report ? (
+        <Typography paragraph>
+          It hasn’t reported yet. It sends a record once a day and after every upgrade, when its .env sets PORTAL_URL and DEPLOYMENT_ID; an
+          air-gapped one exports a file from its Upgrade Centre for you to carry in below.
+        </Typography>
+      ) : null}
+      {report ? (
+        <>
+          {late ? <WarningPanel severity="warning" title={`Its last report is from ${new Date(report.sentAt).toLocaleString()}: it reports daily, so check that it’s up and can reach the portal.`} /> : null}
+          {report.health && !report.health.healthy ? <WarningPanel severity="error" title={`It reported a problem: ${report.health.status}`} /> : null}
+          <table style={{ borderCollapse: 'collapse' }}>
+            <tbody>
+              {(report.units ?? []).map(u => (
+                <Row key={u.unit} label={u.name}>
+                  {unitLine(u)}
+                </Row>
+              ))}
+            </tbody>
+          </table>
+          <Typography variant="caption" style={{ display: 'block', marginTop: 8, opacity: 0.7 }}>
+            {reported?.via === 'file' ? 'Carried in from a file' : 'Reported by the deployment'}, signed with its key, as of {new Date(report.sentAt).toLocaleString()}.
+          </Typography>
+        </>
+      ) : null}
+      {reported?.keySet ? (
+        <Typography variant="caption" component="label" style={{ display: 'block', marginTop: 8 }}>
+          Carry in an exported record:{' '}
+          <input
+            type="file"
+            accept="application/json,.json"
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) carryIn(file).then(() => setFileProblem(undefined), err => setFileProblem((err as Error).message));
+            }}
+          />
+        </Typography>
+      ) : null}
+      {fileProblem ? <WarningPanel severity="error" title={fileProblem} /> : null}
+    </>
+  );
+}
+
 /**
- * One AUGUR deployment: the versions its ring takes, and a link to its Upgrade Centre, which shows what it
- * actually runs. The portal doesn't ask a deployment for its version: AUGUR doesn't tell anyone who isn't signed in.
+ * One AUGUR deployment: the versions its ring takes, what it last reported it runs, and a link to its
+ * Upgrade Centre. The portal never asks a deployment anything: the deployment sends its signed record.
  */
 function DeploymentCard() {
   const { entity } = useEntity();
@@ -178,6 +312,7 @@ function DeploymentCard() {
       {!url ? <Typography paragraph>It isn’t running anywhere yet, so there’s no Upgrade Centre to open.</Typography> : null}
       {pipeline && branch ? (
         <>
+          <Typography variant="subtitle2">What its ring takes</Typography>
           <table style={{ borderCollapse: 'collapse' }}>
             <tbody>
               {pipeline.units.map(u => (
@@ -187,13 +322,10 @@ function DeploymentCard() {
               ))}
             </tbody>
           </table>
-          <Typography variant="caption" style={{ display: 'block', marginTop: 12, opacity: 0.7 }}>
-            These are the versions its ring takes. What it runs now, and whether an upgrade is waiting, is in{' '}
-            {url ? <Link to={`${url}/admin/updates`}>its Upgrade Centre</Link> : 'its Upgrade Centre'}.
-          </Typography>
           <AsOf pipeline={pipeline} />
         </>
       ) : null}
+      <ReportedRuns name={entity.metadata.name} />
     </InfoCard>
   );
 }

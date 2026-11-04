@@ -5,6 +5,8 @@ import Router from 'express-promise-router';
 import { checkReport, deploymentOf, REPORT_KEY } from './reports';
 import { reportStore } from './report-store';
 import { bakeOf } from './bake';
+import { notificationService } from '@backstage/plugin-notifications-node';
+import { LATE_AFTER_MINUTES, lateChanges, raisedStore, span } from './late';
 
 /**
  * AUGUR's pipeline feed for the portal: where each unit is between dev, preview and production, as
@@ -53,8 +55,10 @@ export default createBackendPlugin({
         database: coreServices.database,
         auth: coreServices.auth,
         catalog: catalogServiceRef,
+        scheduler: coreServices.scheduler,
+        notifications: notificationService,
       },
-      async init({ config, http, logger, database, auth, catalog }) {
+      async init({ config, http, logger, database, auth, catalog, scheduler, notifications }) {
         const target = config.getOptionalString('augur.pipeline') ?? 'oci://ghcr.io/harry-burton-dev/im-platform/feed:pipeline';
         const user = config.getOptionalString('augur.readKey.user');
         const token = config.getOptionalString('augur.readKey.token');
@@ -125,6 +129,56 @@ export default createBackendPlugin({
             return;
           }
           res.json({ unit, version, deployments: bakeOf(await reports.all(), unit, version) });
+        });
+
+        // The dead-man alert (ADR 0059 in im-platform; src/late.ts): who hears when a deployment goes quiet.
+        // augur.lateReports.notify lists entity refs, comma separated (user:default/<name> or a group, emailed
+        // at their profile's email). Without it the notification goes to everyone in the portal, and is
+        // emailed to the broadcast address (app-config.email.yaml).
+        const notify = (config.getOptionalString('augur.lateReports.notify') ?? '').split(',').map(r => r.trim()).filter(Boolean);
+        const afterMinutes = config.getOptionalNumber('augur.lateReports.afterMinutes') ?? LATE_AFTER_MINUTES;
+        const raised = await raisedStore(await database.getClient());
+        const recipients = notify.length ? ({ type: 'entity', entityRef: notify } as const) : ({ type: 'broadcast' } as const);
+        await scheduler.scheduleTask({
+          id: 'augur-late-reports',
+          frequency: { minutes: 5 },
+          timeout: { minutes: 2 },
+          initialDelay: { minutes: 5 },
+          fn: async () => {
+            const now = new Date();
+            const { late, back } = lateChanges(await reports.heard(), await raised.all(), now, afterMinutes);
+            for (const h of late) {
+              const quiet = span(Math.round((now.getTime() - Date.parse(h.receivedAt)) / 60_000));
+              await notifications.send({
+                recipients,
+                payload: {
+                  title: `${h.deployment} has gone quiet`,
+                  description: `No record from ${h.deployment} for ${quiet}; it sends one at least every 15 minutes. The server, AUGUR's registry or the way to this portal may be down. Its Grafana can't say so if the whole host is down.`,
+                  link: `/catalog/default/resource/${h.deployment}`,
+                  severity: 'critical',
+                  topic: 'augur-late-report',
+                  scope: `augur-late-report:${h.deployment}`,
+                },
+              });
+              await raised.raise(h, now);
+              logger.warn(`AUGUR deployment ${h.deployment} is late: last record received ${h.receivedAt}.`);
+            }
+            for (const b of back) {
+              await notifications.send({
+                recipients,
+                payload: {
+                  title: `${b.deployment} is reporting again`,
+                  description: `Records from ${b.deployment} came again after ${span(b.quietMinutes)} without one.`,
+                  link: `/catalog/default/resource/${b.deployment}`,
+                  severity: 'normal',
+                  topic: 'augur-late-report',
+                  scope: `augur-late-report:${b.deployment}`,
+                },
+              });
+              await raised.clear(b.deployment);
+              logger.info(`AUGUR deployment ${b.deployment} is reporting again.`);
+            }
+          },
         });
 
         http.addAuthPolicy({ path: '/reports', allow: 'unauthenticated' });

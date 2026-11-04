@@ -73,13 +73,22 @@ Add a `Resource` of type `augur-deployment` to `org/deployments.yaml`, with `aug
 
 ### What it runs
 
-The portal never asks a deployment anything. Each deployment's registry sends a signed record of what it runs (AUGUR and each app's version, what's available, its update policies, health and its last upgrades' results, no personal data) after each change and once a day, to `<PORTAL_URL>/api/augur/reports` (ADR 0019 in im-platform). The record's shapes follow OpAMP's. The portal keeps a record only if:
+The portal never asks a deployment anything. Each deployment's registry sends a signed record of what it runs (AUGUR and each app's version, what's available, its update policies, health and its last upgrades' results, no personal data) after each change and at least every 15 minutes, to `<PORTAL_URL>/api/augur/reports` (ADRs 0019 and 0059 in im-platform). The record's shapes follow OpAMP's. The portal keeps a record only if:
 
 - the deployment is in `org/deployments.yaml`, under the name the record gives;
 - its public key is in the annotation `augur.dev/report-key`, copied from its Upgrade Centre (Reporting); and
 - the signature is that key's, and the record is newer than the one the portal holds and less than 30 days old.
 
-That endpoint needs no sign-in, because the signature is the credential. An air-gapped deployment exports the same record as a file from its Upgrade Centre; carry it across and choose it under **Carry in an exported record** on the deployment's card. The card warns when the last record is more than 36 hours old. The portal keeps each deployment's last 500 records in its database, for bake times and DORA figures later.
+That endpoint needs no sign-in, because the signature is the credential. An air-gapped deployment exports the same record as a file from its Upgrade Centre; carry it across and choose it under **Carry in an exported record** on the deployment's card. The card warns when the last record is more than 36 hours old. The portal keeps each deployment's last 500 records in its database, for bake times and DORA figures later. A run of records that say the same thing keeps only its first and its newest, so the every-15-minutes records don't push history out.
+
+### Late reports
+
+A deployment that sends its records sends one at least every 15 minutes, so the portal raises the alarm when its newest is more than 30 minutes old: the server, AUGUR's registry or the tailnet between them is down, and nothing on that server can say so (ADR 0059 in im-platform). It checks every 5 minutes and sends one notification per incident, and another when records come again. A deployment whose newest record was carried in as a file is never late, and neither is one that has never sent a heartbeat (an AUGUR release from before ADR 0059 reports once a day).
+
+Who hears, in `deploy/.env`:
+
+- `LATE_REPORTS_NOTIFY`: entity refs, comma separated (`user:default/<name>`, or a group). Empty: everyone in the portal.
+- Email: set `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USERNAME`, `SMTP_PASSWORD` and `SMTP_FROM` (the relay), then `docker compose up -d`. A notification to someone is emailed to their catalog profile's `email`; one to everyone goes to `ALERT_EMAIL`. Without `SMTP_HOST` notifications stay in the portal (the bell).
 
 ### Bake time
 

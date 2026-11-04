@@ -24,7 +24,7 @@ describe('the portal’s copy of deployment records', () => {
     expect((await store.all()).map(r => r.sentAt)).toEqual(['2026-11-02T10:00:00.000Z', '2026-11-02T13:00:00.000Z']);
     await store.add(at(4, '0.15.0'), 'sent', new Date('2026-11-02T14:00:01.000Z'));
     expect((await store.all()).map(r => r.sentAt)).toEqual(['2026-11-02T10:00:00.000Z', '2026-11-02T13:00:00.000Z', '2026-11-02T14:00:00.000Z']);
-    expect(await store.heard()).toEqual([{ deployment: 'augur-workbench', receivedAt: '2026-11-02T14:00:01.000Z', via: 'sent' }]);
+    expect(await store.heard()).toEqual([{ deployment: 'augur-workbench', receivedAt: '2026-11-02T14:00:01.000Z', via: 'sent', heartbeats: true }]);
     await db.destroy();
   });
 });

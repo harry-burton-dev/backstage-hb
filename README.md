@@ -83,7 +83,7 @@ That endpoint needs no sign-in, because the signature is the credential. An air-
 
 ### Late reports
 
-A deployment that sends its records sends one at least every 15 minutes, so the portal raises the alarm when its newest is more than 30 minutes old: the server, AUGUR's registry or the tailnet between them is down, and nothing on that server can say so (ADR 0059 in im-platform). It checks every 5 minutes and sends one notification per incident, and another when records come again. A deployment whose newest record was carried in as a file is never late.
+A deployment that sends its records sends one at least every 15 minutes, so the portal raises the alarm when its newest is more than 30 minutes old: the server, AUGUR's registry or the tailnet between them is down, and nothing on that server can say so (ADR 0059 in im-platform). It checks every 5 minutes and sends one notification per incident, and another when records come again. A deployment whose newest record was carried in as a file is never late, and neither is one that has never sent a heartbeat (an AUGUR release from before ADR 0059 reports once a day).
 
 Who hears, in `deploy/.env`:
 

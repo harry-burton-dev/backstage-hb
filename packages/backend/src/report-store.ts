@@ -42,14 +42,16 @@ export async function reportStore(db: Knex) {
       return row ? { report: JSON.parse(row.payload), receivedAt: row.received_at, via: row.via } : undefined;
     },
     /** When the portal last received a record from each deployment, and how it came. */
-    async heard(): Promise<{ deployment: string; receivedAt: string; via: StoredReport['via'] }[]> {
+    async heard(): Promise<{ deployment: string; receivedAt: string; via: StoredReport['via']; heartbeats: boolean }[]> {
       const newest = db(TABLE).select('deployment').max('sent_at as sent_at').groupBy('deployment').as('n');
       const found = await db(TABLE)
         .join(newest, function on() {
           this.on(`${TABLE}.deployment`, '=', 'n.deployment').andOn(`${TABLE}.sent_at`, '=', 'n.sent_at');
         })
         .select(`${TABLE}.deployment as deployment`, `${TABLE}.received_at as received_at`, `${TABLE}.via as via`);
-      return found.map((r: { deployment: string; received_at: string; via: StoredReport['via'] }) => ({ deployment: r.deployment, receivedAt: r.received_at, via: r.via }));
+      // Only a deployment that has sent a heartbeat promises one every 15 minutes: an older registry sends daily.
+      const beats = new Set<string>(await db(TABLE).where('payload', 'like', '%"reason":"heartbeat"%').distinct().pluck('deployment'));
+      return found.map((r: { deployment: string; received_at: string; via: StoredReport['via'] }) => ({ deployment: r.deployment, receivedAt: r.received_at, via: r.via, heartbeats: beats.has(r.deployment) }));
     },
     /** Every kept record, from every deployment, oldest first: what bake time is worked out from. */
     async all(): Promise<DeploymentReport[]> {

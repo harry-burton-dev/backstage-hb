@@ -6,8 +6,8 @@ import type { Knex } from 'knex';
  * portal is down, and nothing on that host can say so. The portal checks every few minutes and sends a
  * notification (emailed when the portal has SMTP settings), and another when records come again.
  *
- * Only deployments whose newest record was sent count: an air-gapped one carries its records in as files,
- * so it is never "late".
+ * Only deployments that send heartbeats count: an air-gapped one carries its records in as files, and one
+ * on a release from before ADR 0059 sends once a day, so neither is ever "late".
  */
 export const LATE_AFTER_MINUTES = 30;
 
@@ -17,6 +17,8 @@ export interface Heard {
   /** When the portal received its newest record, by the portal's own clock. */
   receivedAt: string;
   via: 'sent' | 'file';
+  /** It has sent a heartbeat, so it promises a record every 15 minutes. A registry from before that sends daily. */
+  heartbeats: boolean;
 }
 
 /** A deployment the portal has raised the alarm for, and when it last heard from it then. */
@@ -41,7 +43,7 @@ export function lateChanges(heard: Heard[], raised: Raised[], now: Date, afterMi
   for (const h of heard) {
     const quiet = now.getTime() - Date.parse(h.receivedAt) > limit;
     const was = alarmed.get(h.deployment);
-    if (quiet && !was && h.via === 'sent') late.push(h);
+    if (quiet && !was && h.via === 'sent' && h.heartbeats) late.push(h);
     if (!quiet && was) back.push({ deployment: h.deployment, quietMinutes: Math.round((Date.parse(h.receivedAt) - Date.parse(was.lastHeard)) / 60_000) });
   }
   return { late, back };

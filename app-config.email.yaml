@@ -1,0 +1,18 @@
+# Notifications by email, loaded only when SMTP_HOST is set in deploy/.env (Dockerfile; README.md,
+# "Late reports"). A notification to everyone (such as a late AUGUR deployment, when
+# augur.lateReports.notify isn't set) goes to ALERT_EMAIL.
+notifications:
+  processors:
+    email:
+      transportConfig:
+        transport: smtp
+        hostname: ${SMTP_HOST}
+        port: ${SMTP_PORT}
+        secure: ${SMTP_SECURE}
+        username: ${SMTP_USERNAME}
+        password: ${SMTP_PASSWORD}
+      sender: ${SMTP_FROM}
+      broadcastConfig:
+        receiver: config
+        receiverEmails:
+          - ${ALERT_EMAIL}

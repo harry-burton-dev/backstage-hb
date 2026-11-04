@@ -66,6 +66,8 @@ backend.add(import('@backstage/plugin-user-settings-backend'));
 // notifications and signals plugins
 backend.add(import('@backstage/plugin-notifications-backend'));
 backend.add(import('@backstage/plugin-signals-backend'));
+// Notifications by email, once the portal has SMTP settings (app-config.email.yaml; README.md, "Late reports").
+if (process.env.SMTP_HOST) backend.add(import('@backstage/plugin-notifications-backend-module-email'));
 
 // mcp actions plugin
 backend.add(import('@backstage/plugin-mcp-actions-backend'));

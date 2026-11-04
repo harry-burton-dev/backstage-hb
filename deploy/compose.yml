@@ -40,6 +40,15 @@ services:
       GITHUB_READ_KEY: ${GITHUB_READ_KEY:-}
       GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID:-}
       GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET:-}
+      # Late AUGUR deployments (README.md, "Late reports"): who hears, and the mail relay.
+      LATE_REPORTS_NOTIFY: ${LATE_REPORTS_NOTIFY:-}
+      ALERT_EMAIL: ${ALERT_EMAIL:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
     volumes:
       - techdocs:/app/techdocs
     mem_limit: ${BACKSTAGE_MEMORY:-2g}

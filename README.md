@@ -1,10 +1,10 @@
 # Backstage
 
-The company's developer portal: one [Backstage](https://backstage.io) above every product and every deployment. It reads each product's catalog from its repository, so nothing in it is kept up by hand. Today that's AUGUR, which writes its catalog with `pnpm catalog` (im-platform, `docs/catalog.md`).
+The company's developer portal: one [Backstage](https://backstage.io) above every product and every deployment. It reads each product's catalog from its repository, so nothing in it is kept up by hand. Today that's AUGUR, which writes its catalog with `pnpm catalog` (augur, `docs/catalog.md`).
 
 | What | Where |
 | --- | --- |
-| Catalog | AUGUR's platform, apps, APIs and resources, read from im-platform's `main` branch; the company's people in `org/org.yaml` |
+| Catalog | AUGUR's platform, apps, APIs and resources, read from augur's `main` branch; the company's people in `org/org.yaml` |
 | Docs | AUGUR's `docs/` as one TechDocs site, on the AUGUR platform system, built inside the portal by MkDocs |
 | APIs | AUGUR's OpenAPI contracts, and each app's intents |
 | Sign-in | Keycloak: the workbench AUGUR's realm, as the `backstage` client |
@@ -25,10 +25,10 @@ On the server, beside the workbench AUGUR. It's a compose project of its own (`b
    ```
 2. **Tailscale.** Make an auth key in the Tailscale admin console (Settings → Keys, reusable off, tagged as you tag servers) and put it in `TS_AUTHKEY`. `BACKSTAGE_URL` is `https://backstage.<your tailnet>.ts.net` (the same tailnet name as AUGUR's address).
 3. **Secrets.** `openssl rand -hex 24` for `POSTGRES_PASSWORD`, and again for `AUTH_SESSION_SECRET`.
-4. **GitHub.** `GITHUB_TOKEN` is a read-only token with Contents read on im-platform. The one AUGUR's Upgrade Centre uses (`infra/deploy/secrets/release-feed-token`) does. For the channels and deployment cards, `GITHUB_READ_USER` and `GITHUB_READ_KEY` are a GitHub user and a classic token with read:packages, the same kind of key an AUGUR server pulls with. Without them the cards say the feed can't be read; everything else works.
+4. **GitHub.** `GITHUB_TOKEN` is a read-only token with Contents read on augur. The one AUGUR's Upgrade Centre uses (`infra/deploy/secrets/release-feed-token`) does. For the channels and deployment cards, `GITHUB_READ_USER` and `GITHUB_READ_KEY` are a GitHub user and a classic token with read:packages, the same kind of key an AUGUR server pulls with. Without them the cards say the feed can't be read; everything else works.
 5. **Sign-in.** Make the `backstage` client in AUGUR's Keycloak, with AUGUR's folder (where its `.env` is) and the portal's address:
    ```sh
-   ./keycloak-client.sh /path/to/im-platform/infra/deploy https://backstage.<your tailnet>.ts.net
+   ./keycloak-client.sh /path/to/augur/infra/deploy https://backstage.<your tailnet>.ts.net
    ```
    It prints `OIDC_CLIENT_SECRET=…`: put that in `.env`. `OIDC_METADATA_URL` is AUGUR's `PLATFORM_URL` followed by `/sso/realms/platform/.well-known/openid-configuration`.
 6. **Start it:**
@@ -73,7 +73,7 @@ Add a `Resource` of type `augur-deployment` to `org/deployments.yaml`, with `aug
 
 ### What it runs
 
-The portal never asks a deployment anything. Each deployment's registry sends a signed record of what it runs (AUGUR and each app's version, what's available, its update policies, health and its last upgrades' results, no personal data) after each change and at least every 15 minutes, to `<PORTAL_URL>/api/augur/reports` (ADRs 0019 and 0059 in im-platform). The record's shapes follow OpAMP's. The portal keeps a record only if:
+The portal never asks a deployment anything. Each deployment's registry sends a signed record of what it runs (AUGUR and each app's version, what's available, its update policies, health and its last upgrades' results, no personal data) after each change and at least every 15 minutes, to `<PORTAL_URL>/api/augur/reports` (ADRs 0019 and 0059 in augur). The record's shapes follow OpAMP's. The portal keeps a record only if:
 
 - the deployment is in `org/deployments.yaml`, under the name the record gives;
 - its public key is in the annotation `augur.dev/report-key`, copied from its Upgrade Centre (Reporting); and
@@ -83,7 +83,7 @@ That endpoint needs no sign-in, because the signature is the credential. An air-
 
 ### Late reports
 
-A deployment that sends its records sends one at least every 15 minutes, so the portal raises the alarm when its newest is more than 30 minutes old: the server, AUGUR's registry or the tailnet between them is down, and nothing on that server can say so (ADR 0059 in im-platform). It checks every 5 minutes and sends one notification per incident, and another when records come again. A deployment whose newest record was carried in as a file is never late, and neither is one that has never sent a heartbeat (an AUGUR release from before ADR 0059 reports once a day).
+A deployment that sends its records sends one at least every 15 minutes, so the portal raises the alarm when its newest is more than 30 minutes old: the server, AUGUR's registry or the tailnet between them is down, and nothing on that server can say so (ADR 0059 in augur). It checks every 5 minutes and sends one notification per incident, and another when records come again. A deployment whose newest record was carried in as a file is never late, and neither is one that has never sent a heartbeat (an AUGUR release from before ADR 0059 reports once a day).
 
 Who hears, in `deploy/.env`:
 
@@ -92,7 +92,7 @@ Who hears, in `deploy/.env`:
 
 ### Bake time
 
-`GET <BACKSTAGE_URL>/api/augur/bake?unit=augur&version=0.14.0` says, from those records, how long each deployment has run that version: from its first record running it to its latest one still running it, and whether any record says it went back from it. im-platform's **Promote to stable** asks it before it makes a release stable (ADR 0018 there): a release must have run on a preview deployment for the bake time with no going back. It needs no sign-in, since it says no more than the records do, and the portal is only on the tailnet. The workflow reaches it through Tailscale (im-platform docs/release-channels.md says what to set up).
+`GET <BACKSTAGE_URL>/api/augur/bake?unit=augur&version=0.14.0` says, from those records, how long each deployment has run that version: from its first record running it to its latest one still running it, and whether any record says it went back from it. augur's **Promote to stable** asks it before it makes a release stable (ADR 0018 there): a release must have run on a preview deployment for the bake time with no going back. It needs no sign-in, since it says no more than the records do, and the portal is only on the tailnet. The workflow reaches it through Tailscale (augur docs/release-channels.md says what to set up).
 
 ## Adding a product
 

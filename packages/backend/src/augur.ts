@@ -10,7 +10,7 @@ import { LATE_AFTER_MINUTES, lateChanges, raisedStore, span } from './late';
 
 /**
  * AUGUR's pipeline feed for the portal: where each unit is between dev, preview and production, as
- * im-platform's Pipeline feed workflow publishes it beside the release feed on GitHub's container
+ * augur's Pipeline feed workflow publishes it beside the release feed on GitHub's container
  * registry (ghcr.io/<repo>/feed:pipeline). Read with a deployment read key (read:packages), at most
  * once a minute, and served to the portal's own pages at /api/augur/pipeline. It only describes:
  * nothing here acts on AUGUR or GitHub.
@@ -79,7 +79,7 @@ export default createBackendPlugin({
           res.json({ ...(last.body ? { pipeline: last.body } : {}), ...(last.problem ? { problem: last.problem } : {}) });
         });
 
-        // What each deployment runs, as it reports it (ADR 0019 in im-platform; src/reports.ts).
+        // What each deployment runs, as it reports it (ADR 0019 in augur; src/reports.ts).
         const reports = await reportStore(await database.getClient());
         const deploymentEntity = async (name: string) => {
           const entity = await catalog.getEntityByRef(`resource:default/${name}`, { credentials: await auth.getOwnServiceCredentials() });
@@ -117,7 +117,7 @@ export default createBackendPlugin({
         });
 
         /**
-         * How long a release has run on each deployment, for im-platform's Promote to stable (ADR 0018). It
+         * How long a release has run on each deployment, for augur's Promote to stable (ADR 0018). It
          * needs no sign-in: it says only which versions ran where and for how long, which the deployments'
          * own records already say, and the portal is reached only on the tailnet.
          */
@@ -131,7 +131,7 @@ export default createBackendPlugin({
           res.json({ unit, version, deployments: bakeOf(await reports.all(), unit, version) });
         });
 
-        // The dead-man alert (ADR 0059 in im-platform; src/late.ts): who hears when a deployment goes quiet.
+        // The dead-man alert (ADR 0059 in augur; src/late.ts): who hears when a deployment goes quiet.
         // augur.lateReports.notify lists entity refs, comma separated (user:default/<name> or a group, emailed
         // at their profile's email). Without it the notification goes to everyone in the portal, and is
         // emailed to the broadcast address (app-config.email.yaml).

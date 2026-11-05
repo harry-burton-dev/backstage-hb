@@ -157,7 +157,7 @@ function ChannelsCard() {
 /** The branch a deployment's ring takes its versions from. */
 const branchOfRing = (ring?: string): Branch | undefined => (ring === 'dev' || ring === 'preview' || ring === 'production' ? ring : undefined);
 
-/** What a deployment last reported it runs (ADR 0019 in im-platform; packages/backend/src/reports.ts). */
+/** What a deployment last reported it runs (ADR 0019 in augur; packages/backend/src/reports.ts). */
 interface ReportedUnit {
   unit: string;
   name: string;

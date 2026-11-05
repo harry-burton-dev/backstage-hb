@@ -1,7 +1,7 @@
 import type { Knex } from 'knex';
 
 /**
- * The dead-man alert (im-platform ADR 0059): a deployment that sends its signed record sends one at least
+ * The dead-man alert (augur ADR 0059): a deployment that sends its signed record sends one at least
  * every 15 minutes, so a record more than 30 minutes late means the deployment, its host or the way to the
  * portal is down, and nothing on that host can say so. The portal checks every few minutes and sends a
  * notification (emailed when the portal has SMTP settings), and another when records come again.

@@ -6,7 +6,7 @@ const content = `
 ## The company's developer portal
 
 Everything we build, who owns it, what it calls and what it stands on.
-AUGUR describes itself (\`pnpm catalog\` in im-platform), so nothing here
+AUGUR describes itself (\`pnpm catalog\` in augur), so nothing here
 is kept up by hand.
 
 - **[Catalog](/catalog)**: AUGUR's platform, its apps, their APIs and resources, as on \`dev\`.

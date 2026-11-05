@@ -3,7 +3,7 @@ import type { DeploymentReport } from './reports';
 
 /**
  * Each deployment's records, newest last, in the portal's own database. The last KEEP per deployment are
- * kept. A deployment sends a record at least every 15 minutes (im-platform ADR 0059), mostly the same as
+ * kept. A deployment sends a record at least every 15 minutes (augur ADR 0059), mostly the same as
  * the one before: a run of records saying the same thing keeps only its first and its newest, which is
  * all bake time needs, so history isn't pushed out by heartbeats.
  */

@@ -4,7 +4,7 @@
 #   ./keycloak-client.sh <AUGUR's folder> <BACKSTAGE_URL>
 # It signs in to Keycloak's admin console with KEYCLOAK_ADMIN_USER and KEYCLOAK_ADMIN_PASSWORD from AUGUR's .env.
 set -eu
-augur=${1:?usage: keycloak-client.sh <AUGUR folder, e.g. /opt/stacks/im-platform/infra/deploy> <BACKSTAGE_URL>}
+augur=${1:?usage: keycloak-client.sh <AUGUR folder, e.g. /opt/stacks/augur/infra/deploy> <BACKSTAGE_URL>}
 url=${2:?usage: keycloak-client.sh <AUGUR folder> <BACKSTAGE_URL>}
 url=${url%/}
 password=$(grep '^KEYCLOAK_ADMIN_PASSWORD=' "$augur/.env" | cut -d= -f2-)

@@ -1,14 +1,14 @@
 import type { DeploymentReport } from './reports';
 
 /**
- * How long a release has run on each deployment, from what the deployments report (im-platform ADR
+ * How long a release has run on each deployment, from what the deployments report (augur ADR
  * 0018 and 0019): Promote to stable asks this before it makes a release stable. A deployment baked a
  * release from its first record running it to its latest record still running it, as long as no
  * record in between says it went back from it. Records come at least daily, so the time counted is
  * at most a day short.
  */
 
-/** A unit's line in a record, as im-platform's registry writes it (src/report.ts). */
+/** A unit's line in a record, as augur's registry writes it (src/report.ts). */
 interface ReportedUnit {
   unit: string;
   running?: string;

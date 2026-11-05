@@ -50,7 +50,7 @@ catalog:
     - type: file
       target: ./org/deployments.yaml
     - type: url
-      target: https://github.com/harry-burton-dev/im-platform/blob/main/catalog/all.yaml
+      target: https://github.com/harry-burton-dev/augur/blob/main/catalog/all.yaml
 
 augur:
   # The dead-man alert for AUGUR deployments (README.md, "Late reports").

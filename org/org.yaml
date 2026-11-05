@@ -1,5 +1,5 @@
 # The people and teams of the company, as Backstage sees them. Teams that build AUGUR are in
-# AUGUR's own catalog (catalog/augur.yaml in im-platform); add people here.
+# AUGUR's own catalog (catalog/augur.yaml in augur); add people here.
 apiVersion: backstage.io/v1alpha1
 kind: Group
 metadata:

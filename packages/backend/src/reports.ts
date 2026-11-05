@@ -1,7 +1,7 @@
 import { createPublicKey, verify } from 'node:crypto';
 
 /**
- * What an AUGUR deployment reports it runs (im-platform ADR 0019): its registry sends a signed record
+ * What an AUGUR deployment reports it runs (augur ADR 0019): its registry sends a signed record
  * after every upgrade and once a day, or an admin exports it as a file and carries it across. The portal
  * keeps a record only when the deployment is in the catalog (org/deployments.yaml) with its public key
  * in the augur.dev/report-key annotation, and the signature is that key's.

@@ -1,6 +1,6 @@
 import { createBaseThemeOptions, createUnifiedTheme, genPageTheme, palettes, shapes } from '@backstage/theme';
 
-// AUGUR's colours, from platform/packages/ui-kit/tokens/tokens.json in im-platform. Copy them
+// AUGUR's colours, from platform/packages/ui-kit/tokens/tokens.json in augur. Copy them
 // here by hand when the tokens change; the kit's components aren't used, only its palette and type.
 const t = {
   slate: '#2A3240',

@@ -52,6 +52,18 @@ That sign-in needs a GitHub OAuth app (GitHub → Settings → Developer setting
 
 Put its client ID and a new client secret in `.env` as `GITHUB_OAUTH_CLIENT_ID` and `GITHUB_OAUTH_CLIENT_SECRET`, then `docker compose up -d`. Until they're set the page is there but can't sign in to GitHub.
 
+## New AUGUR app
+
+**Create** → **New AUGUR app** starts an app in its own repository (AUGUR's ADR 0012), from [augur-app-template](https://github.com/harry-burton-dev/augur-app-template) (`templates/augur-app/template.yaml`). You give its id, name and owning team, and where the repository goes. Then it:
+
+1. copies the template into a new repository, `augur-<id>` by convention, with a `catalog-info.yaml`;
+2. runs the template's **Name the app** workflow there. That workflow is `pnpm make-app` committed to main, and it takes a minute or so;
+3. adds the app to the catalog.
+
+The last page links the repository, the naming run and the catalog entry, and lists what's left. That is the repository's secrets and a pull request adding it to AUGUR's `release/app-repos.json`.
+
+It acts as you, with the same GitHub sign-in as the Git Release Manager (above). The first time, it asks for the `repo` and `workflow` scopes: a repository made from the template carries workflow files, and the naming run is a workflow dispatch.
+
 ## Upgrade it
 
 Each push to `main` builds `ghcr.io/harry-burton-dev/backstage-hb:latest` and `:<commit>`. On the server: `docker compose pull && docker compose up -d`. To hold a version, set `BACKSTAGE_VERSION=<commit>` in `.env`.

@@ -74,6 +74,11 @@ catalog:
     # AUGUR, as AUGUR describes itself (pnpm catalog in augur), from main: where work lands.
     - type: url
       target: https://github.com/harry-burton-dev/augur/blob/main/catalog/all.yaml
+    # Software templates: Create → New AUGUR app (README.md, "New AUGUR app").
+    - type: file
+      target: ../../templates/augur-app/template.yaml
+      rules:
+        - allow: [Template]
 
 # AUGUR's pipeline feed: where each unit is between dev, preview and production (packages/backend/src/augur.ts).
 # Read with the same kind of key a deployment reads its release feed with: a classic token with read:packages.

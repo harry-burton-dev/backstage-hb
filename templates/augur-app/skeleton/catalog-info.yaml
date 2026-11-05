@@ -1,0 +1,14 @@
+# How Backstage lists this app. Made by the New AUGUR app template; edit it as the app grows.
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: augur-app-${{ values.id }}
+  title: ${{ values.name | dump }}
+  description: ${{ (values.description or values.name) | dump }}
+  annotations:
+    github.com/project-slug: ${{ values.repoUrl | projectSlug }}
+    augur.dev/app-id: ${{ values.id }}
+spec:
+  type: augur-app
+  lifecycle: experimental
+  owner: ${{ values.owner }}

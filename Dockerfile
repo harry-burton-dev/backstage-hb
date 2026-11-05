@@ -43,6 +43,7 @@ RUN --mount=type=cache,target=/home/node/.cache/yarn,sharing=locked,uid=1000,gid
 COPY --from=build --chown=node:node /app/packages/backend/dist/bundle/ ./
 COPY --chown=node:node app-config*.yaml ./
 COPY --chown=node:node org ./org
+COPY --chown=node:node templates ./templates
 RUN mkdir -p /app/techdocs
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--no-node-snapshot"

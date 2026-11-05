@@ -1,0 +1,122 @@
+# A new AUGUR app in its own repository (AUGUR's ADR 0012), made from augur-app-template: the repository,
+# its name, and its place in the catalog. The steps after it (secrets, AUGUR's app-repos.json) are on the
+# last page. README.md, "New AUGUR app".
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: augur-app
+  title: New AUGUR app
+  description: A repository for a new AUGUR app, made from augur-app-template, named and in the catalog.
+  tags: [augur, app]
+spec:
+  owner: group:default/augur-core
+  type: augur-app
+  parameters:
+    - title: The app
+      required: [id, name, owner]
+      properties:
+        id:
+          title: Id
+          type: string
+          description: Its route (/<id>) and its prefix behind the gateway (/api/<id>). 2 to 40 lowercase letters, digits and dashes, starting with a letter.
+          # The registry's own rule for app ids; it also refuses the ids AUGUR keeps for itself.
+          pattern: '^[a-z][a-z0-9-]{1,39}$'
+          ui:autofocus: true
+        name:
+          title: Name
+          type: string
+          description: What people see in the shell.
+          maxLength: 60
+        description:
+          title: What it's for
+          type: string
+          description: One line, for the catalog.
+        owner:
+          title: Owner
+          type: string
+          description: The team that looks after it.
+          ui:field: OwnerPicker
+          ui:options:
+            catalogFilter:
+              kind: Group
+    - title: Where it lives
+      required: [repoUrl]
+      properties:
+        repoUrl:
+          title: Repository
+          type: string
+          description: Name it augur-<id>. It is made with your own GitHub sign-in.
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts: [github.com]
+            requestUserCredentials:
+              secretsKey: USER_OAUTH_TOKEN
+              additionalScopes:
+                github: [repo, workflow]
+  steps:
+    - id: template
+      name: Copy augur-app-template
+      action: fetch:plain
+      input:
+        url: https://github.com/harry-burton-dev/augur-app-template/tree/main
+    - id: catalog-info
+      name: Describe it for the catalog
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          id: ${{ parameters.id }}
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ parameters.owner }}
+          repoUrl: ${{ parameters.repoUrl }}
+    - id: publish
+      name: Make the repository
+      action: publish:github
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        description: ${{ parameters.description or parameters.name }}
+        defaultBranch: main
+        repoVisibility: public
+        token: ${{ secrets.USER_OAUTH_TOKEN }}
+        gitCommitMessage: Start from augur-app-template
+    # GitHub needs a moment to see the new repository's workflows.
+    - id: settle
+      name: Wait for GitHub
+      action: debug:wait
+      input:
+        seconds: 10
+    - id: name
+      name: Name the app
+      action: github:actions:dispatch
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        workflowId: name-app.yml
+        branchOrTagName: main
+        workflowInputs:
+          id: ${{ parameters.id }}
+          name: ${{ parameters.name }}
+        token: ${{ secrets.USER_OAUTH_TOKEN }}
+    - id: register
+      name: Add it to the catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Naming run
+        url: ${{ steps.publish.output.remoteUrl }}/actions/workflows/name-app.yml
+      - title: In the catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
+    text:
+      - title: What's next
+        content: |
+          The **Name the app** run gives the repository its id and name in a minute or so. Then:
+
+          1. Clone it next to your AUGUR checkout and run it in the shell: `pnpm dev:app ../<repository>` (its README, step 3).
+          2. In the repository's settings, add the secrets `PACKAGES_READ_TOKEN` and `APP_RELEASES_TOKEN` (README, step 4).
+          3. In AUGUR, add the repository to `release/app-repos.json` in a pull request, so deployments trust what it releases (AUGUR's ADR 0047).

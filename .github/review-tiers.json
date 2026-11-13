@@ -1,0 +1,46 @@
+{
+  "about": "Review tiers by path (REVIEW.md), read by AUGUR's Review workflow. High if any path matches high (and not notHigh), Low if every path matches low (and not notLow), otherwise Medium. harryOk: the High paths that also wait for Harry's ok. Globs follow node:path matchesGlob.",
+  "high": [
+    "deploy/**",
+    "app-config*.yaml",
+    "packages/backend/**",
+    "Dockerfile",
+    "templates/**",
+    "org/**",
+    ".yarn/**",
+    ".yarnrc.yml",
+    "package.json",
+    ".github/**",
+    "REVIEW.md"
+  ],
+  "notHigh": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.test.mjs",
+    "**/*.testing.ts",
+    "**/README.md"
+  ],
+  "low": [
+    "**/*.md",
+    ".changeset/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.test.mjs",
+    "**/*.stories.tsx"
+  ],
+  "notLow": [
+    "REVIEW.md",
+    "AGENTS.md",
+    "CLAUDE.md"
+  ],
+  "harryOk": [
+    ".github/workflows/**",
+    ".github/review-tiers.json",
+    "REVIEW.md",
+    "deploy/**",
+    "templates/**",
+    ".yarn/**",
+    ".yarnrc.yml"
+  ],
+  "deployTest": []
+}

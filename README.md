@@ -9,7 +9,7 @@ The company's developer portal: one [Backstage](https://backstage.io) above ever
 | APIs | AUGUR's OpenAPI contracts, and each app's intents |
 | Sign-in | Keycloak: the workbench AUGUR's realm, as the `backstage` client |
 | Channels | Each AUGUR unit's version on dev, preview and production, its dev build, and what's waiting to move on: a card on its system, from AUGUR's pipeline feed (`packages/backend/src/augur.ts`) |
-| Deployments | Each AUGUR deployment in `org/deployments.yaml`: its ring, the versions that ring takes, what it last reported it runs, and a link to its Upgrade Centre |
+| Deployments | Each AUGUR deployment in the fleet's catalog (`AUGUR_DEPLOYMENTS_URL`): its ring, the versions that ring takes, what it last reported it runs, and a link to its Upgrade Centre |
 | Look | AUGUR's colours and type (`packages/app/src/modules/augur/theme.ts`) |
 
 AUGUR never depends on the portal: no AUGUR service calls it, and it never writes to AUGUR. If it's down, nothing on any AUGUR server changes.
@@ -25,19 +25,20 @@ On the server, beside the workbench AUGUR. It's a compose project of its own (`b
    ```
 2. **Tailscale.** Make an auth key in the Tailscale admin console (Settings → Keys, reusable off, tagged as you tag servers) and put it in `TS_AUTHKEY`. `BACKSTAGE_URL` is `https://backstage.<your tailnet>.ts.net` (the same tailnet name as AUGUR's address).
 3. **Secrets.** `openssl rand -hex 24` for `POSTGRES_PASSWORD`, and again for `AUTH_SESSION_SECRET`.
-4. **GitHub.** `GITHUB_TOKEN` is a read-only token with Contents read on augur. The one AUGUR's Upgrade Centre uses (`infra/deploy/secrets/release-feed-token`) does. For the channels and deployment cards, `GITHUB_READ_USER` and `GITHUB_READ_KEY` are a GitHub user and a classic token with read:packages, the same kind of key an AUGUR server pulls with. Without them the cards say the feed can't be read; everything else works.
+4. **GitHub.** `GITHUB_TOKEN` is a read-only token with Contents read on augur and on the repository that holds the fleet's catalog. `AUGUR_DEPLOYMENTS_URL` is that catalog file's GitHub address (`https://github.com/<owner>/<repo>/blob/main/<path>`). For the channels and deployment cards, `GITHUB_READ_USER` and `GITHUB_READ_KEY` are a GitHub user and a classic token with read:packages, the same kind of key an AUGUR server pulls with. Without them the cards say the feed can't be read; everything else works.
 5. **Sign-in.** Make the `backstage` client in AUGUR's Keycloak, with AUGUR's folder (where its `.env` is) and the portal's address:
    ```sh
    ./keycloak-client.sh /path/to/augur/infra/deploy https://backstage.<your tailnet>.ts.net
    ```
    It prints `OIDC_CLIENT_SECRET=…`: put that in `.env`. `OIDC_METADATA_URL` is AUGUR's `PLATFORM_URL` followed by `/sso/realms/platform/.well-known/openid-configuration`.
-6. **Start it:**
+6. **Pick the version.** Set `BACKSTAGE_VERSION` to the full commit id a green Build run on `main` prints in its summary ("Upgrade it").
+7. **Start it:**
    ```sh
    docker compose pull && docker compose up -d
    docker compose logs -f backstage     # "Listening on :7007" when it's ready
    ```
    The server is already signed in to ghcr.io for AUGUR's images; the portal's image is in the same place.
-7. Open `BACKSTAGE_URL` and choose **AUGUR sign-in**. You sign in with your AUGUR account.
+8. Open `BACKSTAGE_URL` and choose **AUGUR sign-in**. You sign in with your AUGUR account.
 
 The portal joins the tailnet as a real interface (`/dev/net/tun`), not in userspace as AUGUR's sidecar does, because it calls AUGUR's Keycloak over the tailnet when it signs you in.
 
@@ -66,7 +67,13 @@ It acts as you, with the same GitHub sign-in as the Git Release Manager (above).
 
 ## Upgrade it
 
-Each push to `main` builds `ghcr.io/harry-burton-dev/backstage-hb:latest` and `:<commit>`. On the server: `docker compose pull && docker compose up -d`. To hold a version, set `BACKSTAGE_VERSION=<commit>` in `.env`.
+Each push to `main` that changes more than notes builds `ghcr.io/harry-burton-dev/backstage-hb:<commit>` (and `:latest`). The server runs the image `BACKSTAGE_VERSION` names in `.env`, so a push never changes it by itself. To upgrade, take the full commit id from a green Build run on `main` (its summary prints the line to set; a commit that changed only notes has no image), set it, then `docker compose pull && docker compose up -d`. A portal set up before the deployments moved to the fleet's catalog needs, before its next pull (with `BACKSTAGE_VERSION=latest` it takes the change by itself):
+
+1. the deployments it had in `org/deployments.yaml` in the fleet's catalog file;
+2. `AUGUR_DEPLOYMENTS_URL` in `.env`, and a `GITHUB_TOKEN` that can read that file's repository;
+3. `BACKSTAGE_VERSION` set to a commit, so it stops following `main`.
+
+Without `AUGUR_DEPLOYMENTS_URL` the portal doesn't start.
 
 Backstage releases every month. `yarn backstage-cli versions:bump` moves every `@backstage/*` package to the newest release; open it as a pull request and let CI build it.
 
@@ -77,17 +84,17 @@ yarn install
 GITHUB_TOKEN=<read-only token> yarn start     # http://localhost:3000, signed in as a guest
 ```
 
-Locally you're a guest, and TechDocs builds in Docker. Put anything only for your machine in `app-config.local.yaml` (it's ignored).
+Locally you're a guest, and TechDocs builds in Docker. To see the deployment cards, copy the whole `catalog.locations` list from `app-config.yaml` into `app-config.local.yaml` (a list there replaces the one here) and add the fleet's catalog as a `url` location. Put anything only for your machine in `app-config.local.yaml` (it's ignored).
 
-## Adding a deployment
+## Deployments
 
-Add a `Resource` of type `augur-deployment` to `org/deployments.yaml`, with `augur.dev/ring` (its `SERVER_RING`) and `augur.dev/url` (its `PLATFORM_URL`). Its `metadata.name` is its `DEPLOYMENT_ID`. Check the workbench's address matches its `PLATFORM_URL`.
+The deployments live with the fleet's deployment files, not here: the portal reads the catalog file at `AUGUR_DEPLOYMENTS_URL`, and picks up a change within a few minutes. If it can't read it (a wrong address, or a `GITHUB_TOKEN` that can't read that repository), it keeps the deployments as it last read them, and the catalog's location for the file shows the error. That location takes only `Resource` entities. A deployment that has never been read is refused its records, and the portal's log says so. Add a `Resource` of type `augur-deployment` there, with `augur.dev/ring` (its `SERVER_RING`) and `augur.dev/url` (its `PLATFORM_URL`). Its `metadata.name` is its `DEPLOYMENT_ID`. Check the workbench's address matches its `PLATFORM_URL`.
 
 ### What it runs
 
 The portal never asks a deployment anything. Each deployment's registry sends a signed record of what it runs (AUGUR and each app's version, what's available, its update policies, health and its last upgrades' results, no personal data) after each change and at least every 15 minutes, to `<PORTAL_URL>/api/augur/reports` (ADRs 0019 and 0059 in augur). The record's shapes follow OpAMP's. The portal keeps a record only if:
 
-- the deployment is in `org/deployments.yaml`, under the name the record gives;
+- the deployment is in the fleet's catalog, under the name the record gives;
 - its public key is in the annotation `augur.dev/report-key`, copied from its Upgrade Centre (Reporting); and
 - the signature is that key's, and the record is newer than the one the portal holds and less than 30 days old.
 

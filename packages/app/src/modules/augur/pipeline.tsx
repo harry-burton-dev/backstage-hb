@@ -246,7 +246,7 @@ function ReportedRuns({ name }: { name: string }) {
       {reported && !reported.keySet ? (
         <Typography paragraph>
           The portal can’t take its reports yet: its public key isn’t in the catalog. Copy it from its Upgrade Centre (Reporting) into the
-          annotation augur.dev/report-key in org/deployments.yaml.
+          annotation augur.dev/report-key in the fleet’s deployments catalog.
         </Typography>
       ) : null}
       {reported?.keySet && !report ? (

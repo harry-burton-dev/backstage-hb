@@ -22,7 +22,7 @@ services:
       - ./tailscale:/config:ro
 
   backstage:
-    image: ${BACKSTAGE_IMAGE:-ghcr.io/harry-burton-dev/backstage-hb}:${BACKSTAGE_VERSION:-latest}
+    image: ${BACKSTAGE_IMAGE:-ghcr.io/harry-burton-dev/backstage-hb}:${BACKSTAGE_VERSION:?set BACKSTAGE_VERSION in .env, to the commit to run}
     restart: unless-stopped
     network_mode: service:tailscale
     depends_on:
@@ -36,6 +36,7 @@ services:
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID:-backstage}
       OIDC_CLIENT_SECRET: ${OIDC_CLIENT_SECRET:?set OIDC_CLIENT_SECRET in .env}
       GITHUB_TOKEN: ${GITHUB_TOKEN:?set GITHUB_TOKEN in .env}
+      AUGUR_DEPLOYMENTS_URL: ${AUGUR_DEPLOYMENTS_URL:?set AUGUR_DEPLOYMENTS_URL in .env}
       GITHUB_READ_USER: ${GITHUB_READ_USER:-}
       GITHUB_READ_KEY: ${GITHUB_READ_KEY:-}
       GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID:-}

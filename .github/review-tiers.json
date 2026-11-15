@@ -1,5 +1,5 @@
 {
-  "about": "Review tiers by path (REVIEW.md), read by AUGUR's Review workflow. High if any path matches high (and not notHigh), Low if every path matches low (and not notLow), otherwise Medium. harryOk: the High paths that also wait for Harry's ok. Globs follow node:path matchesGlob.",
+  "about": "Review tiers by path (REVIEW.md), read by AUGUR's Review workflow. High if any path matches high (and not notHigh), Low if every path matches low (and not notLow), otherwise Medium. notCount: generated files, which don't set the tier; with ignoreRenames, a file only renamed doesn't either. Harry's ok (harryOk, harryOkWhen) only for what can't be undone or gives more access: the deployment files, the app template (what it creates), the pinned Yarn, a workflow gaining privilege or a new action, and the review check's own files. autoOk: every other High pull request merges on green and gets an auto-ok record. Globs follow node:path matchesGlob.",
   "high": [
     "deploy/**",
     "app-config*.yaml",
@@ -10,8 +10,10 @@
     ".yarn/**",
     ".yarnrc.yml",
     "package.json",
-    ".github/**",
-    "REVIEW.md"
+    "REVIEW.md",
+    ".github/workflows/**",
+    ".github/actions/**",
+    ".github/review-tiers.json"
   ],
   "notHigh": [
     "**/*.test.ts",
@@ -33,14 +35,44 @@
     "AGENTS.md",
     "CLAUDE.md"
   ],
+  "notCount": [
+    "yarn.lock"
+  ],
+  "ignoreRenames": true,
   "harryOk": [
-    ".github/workflows/**",
-    ".github/review-tiers.json",
-    "REVIEW.md",
     "deploy/**",
     "templates/**",
     ".yarn/**",
-    ".yarnrc.yml"
+    ".yarnrc.yml",
+    ".github/workflows/review.yml",
+    ".github/review-tiers.json"
   ],
+  "harryOkWhen": [
+    {
+      "paths": [
+        ".github/workflows/**",
+        ".github/actions/**"
+      ],
+      "added": "^\\s*permissions:|: *write\\b|\\bsecrets\\b|id-token|pull_request_target|workflow_run|issue_comment|uses:\\s*['\"]?docker://|^\\s*(container|services):|^\\s*image:",
+      "why": "gives a workflow more privilege or a riskier trigger"
+    },
+    {
+      "paths": [
+        ".github/workflows/**",
+        ".github/actions/**"
+      ],
+      "removed": "^\\s*permissions:|: *(read|none)\\b",
+      "why": "takes a limit off a workflow's token"
+    },
+    {
+      "paths": [
+        ".github/workflows/**",
+        ".github/actions/**"
+      ],
+      "newAction": true,
+      "why": "uses an action no workflow used before"
+    }
+  ],
+  "autoOk": true,
   "deployTest": []
 }

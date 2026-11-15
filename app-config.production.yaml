@@ -46,9 +46,13 @@ catalog:
   locations:
     - type: file
       target: ./org/org.yaml
-    # Each AUGUR deployment, for its card (packages/app/src/modules/augur/pipeline.tsx).
-    - type: file
-      target: ./org/deployments.yaml
+    # Each AUGUR deployment, for its card (packages/app/src/modules/augur/pipeline.tsx): the fleet's own
+    # catalog, kept beside its deployment files (README.md, "Deployments"). Read with GITHUB_TOKEN.
+    - type: url
+      target: ${AUGUR_DEPLOYMENTS_URL}
+      # Deployments only: the file lives outside this repository, so it may add no people, groups or templates.
+      rules:
+        - allow: [Resource]
     - type: url
       target: https://github.com/harry-burton-dev/augur/blob/main/catalog/all.yaml
     - type: file

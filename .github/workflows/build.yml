@@ -4,12 +4,17 @@ name: Build
 on:
   push:
     branches: [main]
+    paths-ignore: ['**/*.md']
+  # Only a change to what goes in the image: notes alone build nothing.
   pull_request:
+    paths-ignore: ['**/*.md']
   workflow_dispatch:
 
 concurrency:
-  group: build-${{ github.ref }}
-  cancel-in-progress: true
+  # A pull request's older build is dropped. Each commit on main has a group of its own, so none is ever
+  # dropped or replaced: the server runs a commit's image by its tag.
+  group: build-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -42,3 +47,6 @@ jobs:
             ${{ github.ref == 'refs/heads/main' && format('ghcr.io/{0}:latest', github.repository) || '' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: The tag to run
+        if: github.ref == 'refs/heads/main'
+        run: echo "Set BACKSTAGE_VERSION=${GITHUB_SHA} in the portal's .env to run this build." >> "$GITHUB_STEP_SUMMARY"

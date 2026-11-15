@@ -3,7 +3,7 @@ import { createPublicKey, verify } from 'node:crypto';
 /**
  * What an AUGUR deployment reports it runs (augur ADR 0019): its registry sends a signed record
  * after every upgrade and once a day, or an admin exports it as a file and carries it across. The portal
- * keeps a record only when the deployment is in the catalog (org/deployments.yaml) with its public key
+ * keeps a record only when the deployment is in the catalog (AUGUR_DEPLOYMENTS_URL) with its public key
  * in the augur.dev/report-key annotation, and the signature is that key's.
  */
 export const REPORT_FORMAT = 'augur.deployment-report/1';
@@ -45,7 +45,7 @@ export const deploymentOf = (body: unknown) => (isSigned(body) && DEPLOYMENT_NAM
 export function checkReport(body: unknown, publicKey: string | undefined, now = new Date()): Checked {
   if (!isSigned(body)) return { status: 400, problem: 'That isn’t a signed AUGUR deployment record: it needs deployment, payload and signature.' };
   if (!publicKey) {
-    return { status: 403, problem: `The catalog has no ${REPORT_KEY} annotation for ${body.deployment}, so its records can’t be checked. Copy the key from its Upgrade Centre into org/deployments.yaml.` };
+    return { status: 403, problem: `The catalog has no ${REPORT_KEY} annotation for ${body.deployment}, so its records can’t be checked. The portal’s admin copies the key from its Upgrade Centre into the fleet's deployments catalog.` };
   }
   let ok = false;
   try {

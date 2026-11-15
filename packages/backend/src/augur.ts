@@ -92,7 +92,8 @@ export default createBackendPlugin({
           const name = deploymentOf(req.body);
           const entity = name ? await deploymentEntity(name) : undefined;
           if (name && !entity) {
-            res.status(404).json({ problem: `The catalog has no AUGUR deployment called ${name}. Add it to org/deployments.yaml.` });
+            logger.warn(`AUGUR deployment record refused for ${name}: not in the catalog`);
+            res.status(404).json({ problem: `The portal's catalog has no AUGUR deployment called ${name}. The portal’s admin adds it to the fleet’s deployments catalog; if it’s there already, the portal hasn’t read that file yet (its catalog location shows why).` });
             return;
           }
           const checked = checkReport(req.body, entity?.metadata.annotations?.[REPORT_KEY]);

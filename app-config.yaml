@@ -68,9 +68,8 @@ catalog:
     # The company's people and teams.
     - type: file
       target: ../../org/org.yaml
-    # Each AUGUR deployment, for its card (packages/app/src/modules/augur/pipeline.tsx).
-    - type: file
-      target: ../../org/deployments.yaml
+    # The AUGUR deployments come from the fleet's catalog in production (app-config.production.yaml). To see
+    # their cards here, add that location in app-config.local.yaml (README.md, "Develop it").
     # AUGUR, as AUGUR describes itself (pnpm catalog in augur), from main: where work lands.
     - type: url
       target: https://github.com/harry-burton-dev/augur/blob/main/catalog/all.yaml
